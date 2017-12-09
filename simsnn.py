@@ -24,8 +24,4 @@ if __name__ == "__main__":
 # Parse all the arguments
     args = arg_parser.parse_args(sys.argv[1:])
 
-    print("Seed for input vector x is {}".format(args.xseed))
-    print("Seed for Weight matrix W is {}".format(args.wseed))
-    print("Seed for bias b is {}".format(args.bseed))
-    print("Total number of time steps to simulate is {}".format(args.tsim))
 
