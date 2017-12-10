@@ -2,11 +2,11 @@ import numpy as np
 from utils import *
 
 class SpikingNueralNetwork:
-    def __init__(self, input=10, output=10, inputseed=7000, weightseed=8000, biasseed=0, activation=sigmoid, threshold=5):
+    def __init__(self, input=1000, output=1000, inputseed=7000, weightseed=8000, biasseed=0, activation=sigmoid, threshold=50):
         np.random.seed=inputseed
         self.x = np.random.randint(2,size=(input,1))
         np.random.seed=weightseed
-        self.W = np.random.randn(output, input)
+        self.W = np.random.randn(output, input)/(output*input)**.5
         np.random.seed=biasseed
         self.b = np.random.randn(output, 1)
         self.y = np.zeros((output,1))
