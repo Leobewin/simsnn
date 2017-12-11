@@ -26,7 +26,7 @@ class SpikingNueralNetwork:
         np.random.seed(weightseed)
         self.W = np.random.randn(output, input)/(output*input)**.5
         np.random.seed(biasseed)
-        self.b = np.random.randn(1, 1)
+        self.b = np.random.randn(1, 1)/(output*input)**5
         self.y = np.zeros((output,1))
         self.activation = activation
         self.threshold = threshold
