@@ -51,7 +51,7 @@ class SpikingNueralNetwork:
         :param start: Start of the Chunk.
         :param end: End of the Chunk.
         """
-        self.y[start:end,:] = self.y[start:end,:] + self.activation(np.matmul(self.W[start:end,:],self.x)+self.b)
+        self.y[start:end, :] = self.y[start:end, :] + self.activation(np.dot(self.W[start:end, :], self.x)) + self.b
 
     def after_forward_parallel(self,start,end):
         """

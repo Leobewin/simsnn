@@ -19,7 +19,7 @@ def simulation(network, worker_index, chunk_boundary, result_queue):
 
 
 
-def runsim(xseed, wseed, bseed, tsim, number_of_process=3):
+def runsim(xseed, wseed, bseed, tsim, number_of_process=4):
     """
     :param xseed: Seed for Input Vector x
     :param wseed: Seed for Weight Matrix W
@@ -58,9 +58,9 @@ def runsim(xseed, wseed, bseed, tsim, number_of_process=3):
             child.start()
         # Get the result back from the worker processes
         for worker_index in range(number_of_process):
-            worker_index, result_chunk = result_queue.get(block=True)
-            chunk_boundary = chunk_boundaries[worker_index]
-            network.y[chunk_boundary[0]:chunk_boundary[1],:] = result_chunk[chunk_boundary[0]:chunk_boundary[1],:]
+           worker_index, result_chunk = result_queue.get(block=True)
+           chunk_boundary = chunk_boundaries[worker_index]
+           network.y[chunk_boundary[0]:chunk_boundary[1],:] = result_chunk[chunk_boundary[0]:chunk_boundary[1],:]
         # Wait for all child processed to finish
         for c in children:
             c.join()
