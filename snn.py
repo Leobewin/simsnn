@@ -146,7 +146,6 @@ class SpikingNueralNetwork:
         self.print_x()
         self.print_y()
 
-    # Utility function to plot activities of nueron
     def plot_output(self,nueron):
         """
         Plot the activities of output nueron
@@ -159,7 +158,6 @@ class SpikingNueralNetwork:
         plt.ylabel('Output of Nueron {}'.format(nueron))
         plt.show()
 
-    # Utility function to plot activities of nueron
     def plot_input(self,nueron):
         """
         Plot the activities of output nueron
