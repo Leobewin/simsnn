@@ -18,11 +18,9 @@ def simulation(network, tsim, worker_index, chunk_boundary, result_queue,x_queue
 
 
 
-def runsim(xseed, wseed, bseed, tsim, number_of_process=2):
+def runsim(xseed, wseed, bseed, tsim, number_of_process=3):
     network = SpikingNueralNetwork(inputseed=xseed,weightseed=wseed,biasseed=bseed,threshold=5)
-    network_output_state = []
-    network_input_state = []
-    print(network)
+    print(network.debug_network_state())
     work_divison = network.output//number_of_process
     chunk_boundaries = [(i*work_divison,i*work_divison+work_divison) for i in range(number_of_process)]
     if(network.output%number_of_process):
@@ -64,24 +62,13 @@ def runsim(xseed, wseed, bseed, tsim, number_of_process=2):
 
         for c in children:
             c.join()
-        network_output_state.append(network.y.copy())
-        network_input_state.append(network.x.copy())
-        #print(network_output_state)
-        #print(network_input_state)
-    #print(network_output_state)
-    print(network_input_state)
-    network_state_y = np.array(network_output_state)
-    network_state_x = np.array(network_input_state)
-    x,y,z = network_state_y.shape
-    network_state_y = network_state_y.reshape(x,y)
-    plt.plot(network_state_y[:,0])
-    plt.ylabel('State of Nueral Network')
-    plt.show()
-    x,y,z = network_state_x.shape
-    network_state_x = network_state_x.reshape(x,y)
-    plt.plot(network_state_x[:,0])
-    plt.ylabel('Input State of Nueral Network')
-    plt.show()
+        network.network_output_ts.append(network.y.copy())
+        network.network_input_ts.append(network.x.copy())
+
+    print(network)
+    for output in range(network.output):
+        network.plot_output(output)
+        network.plot_input(output)
 
 
 if __name__ == "__main__":
@@ -91,10 +78,10 @@ if __name__ == "__main__":
             SIMSNN_VER))
 
     arg_parser.add_argument('-x','--xseed',action='store',type=int,
-                            default=7000, help='Seed value for input vector x')
+                            default=0, help='Seed value for input vector x')
 
     arg_parser.add_argument('-w','--wseed',action='store',type=int,
-                            default=8000, help='Seed value for Weight matrix W')
+                            default=0, help='Seed value for Weight matrix W')
 
     arg_parser.add_argument('-b','--bseed',action='store',type=int,
                             default=0, help='Seed value for bias')
