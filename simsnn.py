@@ -6,19 +6,7 @@ from multiprocessing import Process,Queue
 # Version of the Simulator
 SIMSNN_VER = "0.1"
 
-def simulation(network, worker_index, chunk_boundary, result_queue):
-    """
-    :param network: Network to be simulated
-    :param worker_index: ID of the worker
-    :param chunk_boundary: Boundary on which the worker will work
-    :param result_queue: Queue in which to put result for aggregation
-    """
-    network.feed_forward_parallel(*chunk_boundary)
-    #Put the value of y in the queue for aggregation
-    result_queue.put((worker_index,network.y))
-
-
-
+# Function to run the simulation
 def runsim(xseed, wseed, bseed, tsim, number_of_process=4):
     """
     :param xseed: Seed for Input Vector x
@@ -78,6 +66,17 @@ def runsim(xseed, wseed, bseed, tsim, number_of_process=4):
         network.plot_output(output)
         network.plot_input(output)
 
+# Helper function which simulates single timestep
+def simulation(network, worker_index, chunk_boundary, result_queue):
+    """
+    :param network: Network to be simulated
+    :param worker_index: ID of the worker
+    :param chunk_boundary: Boundary on which the worker will work
+    :param result_queue: Queue in which to put result for aggregation
+    """
+    network.feed_forward_parallel(*chunk_boundary)
+    #Put the value of y in the queue for aggregation
+    result_queue.put((worker_index,network.y))
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser(
