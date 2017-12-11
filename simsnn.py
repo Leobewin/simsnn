@@ -8,12 +8,13 @@ import matplotlib.pyplot as plt
 SIMSNN_VER = "0.1"
 
 def runsim(xseed, wseed, bseed, tsim):
-    network = SpikingNueralNetwork(inputseed=xseed,weightseed=wseed,biasseed=bseed,threshold=12)
+    network = SpikingNueralNetwork(inputseed=xseed,weightseed=wseed,biasseed=bseed,threshold=5)
     network_state = []
     for i in range(tsim):
         network.feed_forward()
         network.after_forward()
         network_state.append(network.y)
+    print(network)
 
     network_state = np.array(network_state)
     x,y,z = network_state.shape
@@ -40,7 +41,7 @@ if __name__ == "__main__":
                             default=0, help='Seed value for bias')
 
     arg_parser.add_argument('-t','--tsim',action='store',type=int,
-                            default=100, help='Total number of time steps to simulate')
+                            default=50, help='Total number of time steps to simulate')
 # Parse all the arguments
     args = arg_parser.parse_args(sys.argv[1:])
 # Running the simulator for timestep tsim
