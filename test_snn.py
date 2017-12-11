@@ -18,7 +18,7 @@ class TestSNN(unittest.TestCase):
  
     def test_output_reset_after_threshold(self):
         """
-        Test that all the  values of x are being reset if y is not above
+        Test that values of y are being reset if y is above
         threshold
         """
         network = SpikingNueralNetwork(input=3,output=3,threshold=5)
