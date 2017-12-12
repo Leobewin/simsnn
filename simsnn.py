@@ -76,7 +76,7 @@ def simulation(network, worker_index, chunk_boundaries, result_queue, x_output):
     network.feed_forward_parallel(*chunk_boundaries[worker_index])
     # Check if the value of y is above threshold and also change the value of x
     spike = network.after_forward_parallel(*chunk_boundaries[worker_index])
-    #Put the value of x in the queue to let other workers know
+    #Communicate to other workers if there is any thing to communicate using shared variable
     if spike:
         start,end = chunk_boundaries[worker_index]
         x_output[start:end,:] = network.x[start:end,:]
