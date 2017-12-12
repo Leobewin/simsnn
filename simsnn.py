@@ -25,25 +25,31 @@ def runsim(xseed, wseed, bseed, tsim, number_of_process=4):
     if(network.output%number_of_process):
         chunk_boundaries[-1]=(chunk_boundaries[-1][0],network.output)
     # Start of the Simulation
-    for i in range(tsim):
-        children = []
-        # Queue in which worker processes will put their result
-        result_queue = Queue()
-        for worker_index in range(number_of_process):
-            children.append(
-                Process(
-                    target=simulation,
-                    args=(
-                        network,
-                        worker_index,
-                        chunk_boundaries[worker_index],
-                        result_queue,
-                    )
+    children = []
+    # Queue in which worker processes will put their result
+    result_queue = Queue()
+    for worker_index in range(number_of_process):
+        children.append(
+            Process(
+                target=simulation,
+                args=(
+                    network,
+                    worker_index,
+                    chunk_boundaries[worker_index],
+                    result_queue,
                 )
             )
-        # Start all the child process
-        for child in children:
-            child.start()
+        )
+    # Start all the child process
+    for i in range(tsim):
+        # Start all the processes duing the initial iteration
+        if i==0:
+            for child in children:
+                child.start()
+        # Run the process using run
+        else:
+            for child in children:
+                child.run()
         # Get the result back from the worker processes
         for worker_index in range(number_of_process):
            worker_index, result_chunk = result_queue.get(block=True)
