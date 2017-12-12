@@ -2,7 +2,7 @@ import sys
 import argparse
 from snn import SpikingNueralNetwork
 import numpy as np
-from multiprocessing import Process,Queue
+from multiprocessing import Process
 import sharedmem
 
 # Version of the Simulator
@@ -28,8 +28,7 @@ def runsim(xseed, wseed, bseed, tsim, number_of_process=4):
         chunk_boundaries[-1]=(chunk_boundaries[-1][0],network.output)
     # Start of the Simulation
     children = []
-    # Queue in which worker processes will put their result
-    result_queue = Queue()
+    # Shared variable in which worker processes will synchronize their results
     x_output = sharedmem.empty((network.input,1),dtype=int)
     x_output[:] = network.x
     for worker_index in range(number_of_process):
@@ -40,7 +39,6 @@ def runsim(xseed, wseed, bseed, tsim, number_of_process=4):
                     network,
                     worker_index,
                     chunk_boundaries,
-                    result_queue,
                     x_output
                 )
             )
@@ -64,12 +62,12 @@ def runsim(xseed, wseed, bseed, tsim, number_of_process=4):
         network.plot_input(input)
 
 # Helper function which simulates single timestep
-def simulation(network, worker_index, chunk_boundaries, result_queue, x_output):
+def simulation(network, worker_index, chunk_boundaries, x_output):
     """
     :param network: Network to be simulated
     :param worker_index: ID of the worker
     :param chunk_boundary: Boundary on which the worker will work
-    :param result_queue: Queue in which to put result for aggregation
+    :param x_output: Shared array storing the value of output vector
     """
     # Using x_output to synchronize between different processes
     network.x = np.array(x_output).reshape(network.input,1)
