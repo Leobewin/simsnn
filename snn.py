@@ -63,7 +63,7 @@ class SpikingNueralNetwork:
         """
         spike = False
         above_threshold = self.y[start:end,:]>self.threshold
-        if np.any(above_threshold) or np.any(self.x):
+        if np.any(above_threshold) or np.any(self.x[start:end,:]):
             spike=True
         self.y[start:end,:][above_threshold]=0
         self.x[start:end,:][above_threshold]=1

@@ -2,7 +2,8 @@ import sys
 import argparse
 from snn import SpikingNueralNetwork
 import numpy as np
-from multiprocessing import Process,Queue,Array
+from multiprocessing import Process,Queue
+import sharedmem
 
 # Version of the Simulator
 SIMSNN_VER = "0.1"
@@ -29,7 +30,8 @@ def runsim(xseed, wseed, bseed, tsim, number_of_process=4):
     children = []
     # Queue in which worker processes will put their result
     result_queue = Queue()
-    x_output = Array('i',network.x)
+    x_output = sharedmem.empty((network.input,1),dtype=int)
+    x_output[:] = network.x
     for worker_index in range(number_of_process):
         children.append(
             Process(
@@ -45,6 +47,8 @@ def runsim(xseed, wseed, bseed, tsim, number_of_process=4):
         )
     # Start all the child process
     for i in range(tsim):
+        # Record the state of x
+        network.network_input_ts.append(x_output.copy())
         # Start all the processes duing the initial iteration
         if i==0:
             for child in children:
@@ -53,21 +57,11 @@ def runsim(xseed, wseed, bseed, tsim, number_of_process=4):
         else:
             for child in children:
                 child.run()
-
-        while not result_queue.empty():
-            worker_index, result_chunk = result_queue.get(block=True)
-            chunk = chunk_boundaries[worker_index]
-            network.x[chunk[0]:chunk[1],:] = result_chunk[chunk[0]:chunk[1],:]
-        # Copying the value of network.x into shared variable so that all rpocess will get it
-        x_output = network.x
         # Wait for all child processed to finish
         for c in children:
             c.join()
-        # Record the state of x and y
-        network.network_input_ts.append(network.x.copy())
-
-    #for input in range(network.input):
-    #    network.plot_input(input)
+    for input in range(network.input):
+        network.plot_input(input)
 
 # Helper function which simulates single timestep
 def simulation(network, worker_index, chunk_boundaries, result_queue, x_output):
@@ -84,7 +78,8 @@ def simulation(network, worker_index, chunk_boundaries, result_queue, x_output):
     spike = network.after_forward_parallel(*chunk_boundaries[worker_index])
     #Put the value of x in the queue to let other workers know
     if spike:
-        result_queue.put((worker_index,network.x))
+        start,end = chunk_boundaries[worker_index]
+        x_output[start:end,:] = network.x[start:end,:]
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser(
