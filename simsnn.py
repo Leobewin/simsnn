@@ -1,7 +1,8 @@
 import sys
 import argparse
 from snn import SpikingNueralNetwork
-from multiprocessing import Process,Queue
+import numpy as np
+from multiprocessing import Process,Queue,Array
 
 # Version of the Simulator
 SIMSNN_VER = "0.1"
@@ -28,6 +29,7 @@ def runsim(xseed, wseed, bseed, tsim, number_of_process=4):
     children = []
     # Queue in which worker processes will put their result
     result_queue = Queue()
+    x_output = Array('i',network.x)
     for worker_index in range(number_of_process):
         children.append(
             Process(
@@ -35,8 +37,9 @@ def runsim(xseed, wseed, bseed, tsim, number_of_process=4):
                 args=(
                     network,
                     worker_index,
-                    chunk_boundaries[worker_index],
+                    chunk_boundaries,
                     result_queue,
+                    x_output
                 )
             )
         )
@@ -50,39 +53,38 @@ def runsim(xseed, wseed, bseed, tsim, number_of_process=4):
         else:
             for child in children:
                 child.run()
-        # Get the result back from the worker processes
-        for worker_index in range(number_of_process):
-           worker_index, result_chunk = result_queue.get(block=True)
-           chunk_boundary = chunk_boundaries[worker_index]
-           network.y[chunk_boundary[0]:chunk_boundary[1],:] = result_chunk[chunk_boundary[0]:chunk_boundary[1],:]
+
+        while not result_queue.empty():
+            worker_index, result_chunk = result_queue.get(block=True)
+            chunk = chunk_boundaries[worker_index]
+            network.x[chunk[0]:chunk[1],:] = result_chunk[chunk[0]:chunk[1],:]
+        # Copying the value of network.x into shared variable so that all rpocess will get it
+        x_output = network.x
         # Wait for all child processed to finish
         for c in children:
             c.join()
-
-        # Check if the value of y is above threshold and also change the value of x
-        network.after_forward()
-
         # Record the state of x and y
-        network.network_output_ts.append(network.y.copy())
         network.network_input_ts.append(network.x.copy())
 
-    # Juts here for illustration purpose
-    print(network)
-    for output in range(network.output):
-        network.plot_output(output)
-        network.plot_input(output)
+    #for input in range(network.input):
+    #    network.plot_input(input)
 
 # Helper function which simulates single timestep
-def simulation(network, worker_index, chunk_boundary, result_queue):
+def simulation(network, worker_index, chunk_boundaries, result_queue, x_output):
     """
     :param network: Network to be simulated
     :param worker_index: ID of the worker
     :param chunk_boundary: Boundary on which the worker will work
     :param result_queue: Queue in which to put result for aggregation
     """
-    network.feed_forward_parallel(*chunk_boundary)
-    #Put the value of y in the queue for aggregation
-    result_queue.put((worker_index,network.y))
+    # Using x_output to synchronize between different processes
+    network.x = np.array(x_output).reshape(network.input,1)
+    network.feed_forward_parallel(*chunk_boundaries[worker_index])
+    # Check if the value of y is above threshold and also change the value of x
+    spike = network.after_forward_parallel(*chunk_boundaries[worker_index])
+    #Put the value of x in the queue to let other workers know
+    if spike:
+        result_queue.put((worker_index,network.x))
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser(

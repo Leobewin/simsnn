@@ -61,13 +61,14 @@ class SpikingNueralNetwork:
         :param start: Start of Chunk size.
         :param end: End of Chunk size.
         """
+        spike = False
         above_threshold = self.y[start:end,:]>self.threshold
+        if np.any(above_threshold) or np.any(self.x):
+            spike=True
         self.y[start:end,:][above_threshold]=0
         self.x[start:end,:][above_threshold]=1
         self.x[start:end,:][above_threshold<1]=0
-        if np.any(above_threshold):
-            return True
-        return False
+        return spike
 
 
     def after_forward(self):
